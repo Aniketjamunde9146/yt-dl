@@ -256,13 +256,17 @@ function buildQualityList(formats) {
     formats.forEach(f => {
         if (f.ext !== "mp4") return;
 
+        // आता backend label आधीच "720p" असं देतो
         const match = (f.label || "").match(/(\d{3,4}p)/);
         if (!match) return;
 
-        const q = match[1];
+        const q = match[1]; // e.g. "720p"
+
         if (!ALLOWED_QUALITIES.includes(q)) return;
 
-        if (!best[q] || f.filesize > best[q].filesize) best[q] = f;
+        if (!best[q] || (f.filesize || 0) > (best[q].filesize || 0)) {
+            best[q] = f;
+        }
     });
 
     ALLOWED_QUALITIES.forEach(q => {
@@ -281,7 +285,13 @@ function buildQualityList(formats) {
             `;
         }
     });
+
+    // जर काहीच quality मिळाली नाहीत तर user ला सांग
+    if (!mp4List.innerHTML.trim()) {
+        mp4List.innerHTML = `<div class="quality-meta">No standard 144p–1080p formats available for this video. Try another link.</div>`;
+    }
 }
+
 
 
 // ===================== VIDEO DOWNLOAD =====================

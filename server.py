@@ -75,21 +75,46 @@ def analyze():
     try:
         url = request.json.get("url", "").strip()
 
-        with yt_dlp.YoutubeDL(yt_options()) as ydl:
+        opts = {
+            "cookiefile": "www.youtube.com_cookies.txt",  # RIGHT COOKIE
+            "skip_download": True,
+            "noplaylist": True,
+            "quiet": True,
+            "no_warnings": True
+        }
+
+        with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=False)
 
         formats = []
-        for f in info["formats"]:
-            label = f.get("format_note") or f.get("resolution")
-            if not label:
+
+        for f in info.get("formats", []):
+            ext = f.get("ext")
+            if ext != "mp4":
                 continue
+
+            height = f.get("height")
+
+            # fallback if height missing
+            if not height:
+                res = f.get("resolution")  # e.g. "1920x1080"
+                if res and "x" in res:
+                    height = res.split("x")[1]
+
+            if not height:
+                continue
+
+            label = f"{height}p"
+            filesize = f.get("filesize") or f.get("filesize_approx")
+
             formats.append({
                 "format_id": f.get("format_id"),
                 "label": label,
-                "ext": f.get("ext"),
-                "filesize": f.get("filesize"),
-                "filesize_approx": f.get("filesize_approx"),
+                "ext": "mp4",
+                "filesize": filesize
             })
+
+        print("Formats found:", len(formats))
 
         return jsonify({
             "title": info.get("title", "Video"),
@@ -100,6 +125,7 @@ def analyze():
     except Exception as e:
         print("ANALYZE ERROR:", e)
         return jsonify({"error": "Analyze failed"}), 500
+
 
 # -----------------------------------------------------------
 # DOWNLOAD VIDEO
@@ -192,4 +218,5 @@ def file():
 # LOCAL RUN
 # -----------------------------------------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)

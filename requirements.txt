@@ -1,7 +1,6 @@
 Flask
 Flask-Cors
 instaloader
-yt-dlp
+yt-dlp>=2024.12.1
 requests
 Werkzeug
-gunicorn
