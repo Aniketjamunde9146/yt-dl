@@ -12,24 +12,29 @@ os.makedirs(DOWNLOADS, exist_ok=True)
 
 progress = {"percent": "0%", "speed": "", "eta": ""}
 
-# ---------------------------------------------
+# ======================================================
+# COOKIE FILE NAME (IMPORTANT)
+# ======================================================
+COOKIE_FILE = "youtube_cookies.txt"   # <-- EXACT name
+
+# ======================================================
 # STATIC FILE SERVE
-# ---------------------------------------------
+# ======================================================
 @app.route('/<path:path>')
 def serve_static_file(path):
     return send_file(path)
 
-# ---------------------------------------------
-# HOME ROUTE
-# ---------------------------------------------
+# ======================================================
+# HOME
+# ======================================================
 @app.route("/")
 def home():
     return send_file("index.html")
 
-# ---------------------------------------------
+# ======================================================
 # HELPERS
-# ---------------------------------------------
-def safe_filename(name: str) -> str:
+# ======================================================
+def safe_filename(name: str):
     return re.sub(r'[<>:"/\\|?*]', "", name).strip()
 
 def hook(d):
@@ -42,9 +47,11 @@ def extract_shortcode(url: str):
     m = re.findall(r"/(reel|p|tv)/([^/?]+)", url)
     return m[0][1] if m else None
 
+# Instagram loader
 def get_instaloader():
     username = "aniketwebdev.dev"
     session_file = f"session-{username}"
+
     if not os.path.exists(session_file):
         return None
 
@@ -55,49 +62,44 @@ def get_instaloader():
     except:
         return None
 
-# -----------------------------------------------------------
-# YOUTUBE COOKIE ENABLED yt-dlp OPTIONS
-# -----------------------------------------------------------
+# ======================================================
+# YT-DLP OPTIONS (COOKIE ENABLED)
+# ======================================================
 def yt_options(extra=None):
     base = {
-        "cookiefile": "youtube_cookies.txt",   # <-- MOST IMPORTANT LINE
+        "cookiefile": COOKIE_FILE,
         "skip_download": True,
+        "quiet": True,
+        "no_warnings": True,
+        "noplaylist": True,
     }
     if extra:
         base.update(extra)
     return base
 
-# -----------------------------------------------------------
-# ANALYZE (YOUTUBE, TIKTOK, FB, ETC)
-# -----------------------------------------------------------
+# ======================================================
+# YOUTUBE / GENERIC ANALYZE
+# ======================================================
 @app.route("/analyze", methods=["POST"])
 def analyze():
     try:
         url = request.json.get("url", "").strip()
 
-        opts = {
-            "cookiefile": "www.youtube.com_cookies.txt",  # RIGHT COOKIE
-            "skip_download": True,
-            "noplaylist": True,
-            "quiet": True,
-            "no_warnings": True
-        }
+        opts = yt_options()
 
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=False)
 
         formats = []
-
         for f in info.get("formats", []):
             ext = f.get("ext")
             if ext != "mp4":
                 continue
 
-            height = f.get("height")
+            height = f.get("height") or None
 
-            # fallback if height missing
             if not height:
-                res = f.get("resolution")  # e.g. "1920x1080"
+                res = f.get("resolution")
                 if res and "x" in res:
                     height = res.split("x")[1]
 
@@ -126,10 +128,9 @@ def analyze():
         print("ANALYZE ERROR:", e)
         return jsonify({"error": "Analyze failed"}), 500
 
-
-# -----------------------------------------------------------
-# DOWNLOAD VIDEO
-# -----------------------------------------------------------
+# ======================================================
+# VIDEO DOWNLOAD
+# ======================================================
 @app.route("/download/video", methods=["POST"])
 def download_video():
     try:
@@ -157,9 +158,9 @@ def download_video():
         print("VIDEO ERROR:", e)
         return jsonify({"error": "Video download failed"}), 500
 
-# -----------------------------------------------------------
-# DOWNLOAD MP3
-# -----------------------------------------------------------
+# ======================================================
+# AUDIO DOWNLOAD
+# ======================================================
 @app.route("/download/audio", methods=["POST"])
 def download_audio():
     try:
@@ -192,16 +193,16 @@ def download_audio():
         print("AUDIO ERROR:", e)
         return jsonify({"error": "Audio download failed"}), 500
 
-# -----------------------------------------------------------
+# ======================================================
 # PROGRESS
-# -----------------------------------------------------------
+# ======================================================
 @app.route("/progress")
 def prog():
     return jsonify(progress)
 
-# -----------------------------------------------------------
+# ======================================================
 # SERVE DOWNLOADED FILE
-# -----------------------------------------------------------
+# ======================================================
 @app.route("/file")
 def file():
     path = request.args.get("path", "")
@@ -214,9 +215,9 @@ def file():
 
     return send_file(path, as_attachment=True)
 
-# -----------------------------------------------------------
-# LOCAL RUN
-# -----------------------------------------------------------
+# ======================================================
+# RUN (DOCKER READY)
+# ======================================================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
