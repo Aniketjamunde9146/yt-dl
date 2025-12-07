@@ -1,0 +1,7 @@
+Flask
+Flask-Cors
+instaloader
+yt-dlp
+requests
+Werkzeug
+gunicorn

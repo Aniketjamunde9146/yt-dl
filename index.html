@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AWD Downloader</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 🌟 BASIC SEO -->
+    <title>AWD Downloader – Fast YouTube, Instagram, Facebook Video Downloader</title>
+    <meta name="description"
+        content="AWD Downloader – Fast, clean and powerful video downloader for YouTube, Instagram Reels, Facebook, TikTok, Twitter. Download HD videos (144p–1080p) or MP3 in seconds. No ads." />
+    <meta name="keywords"
+        content="video downloader, youtube downloader, instagram reel download, facebook video download, tiktok download, mp3 converter, hd video download" />
+    <meta name="author" content="AWD Team" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- 🌟 MOBILE OPTIMIZATION -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#facc15" />
+    
+    <!-- 🌟 OPEN GRAPH FOR SOCIAL SHARE -->
+    <meta property="og:title" content="AWD Downloader – Fast & Clean Video Downloader" />
+    <meta property="og:description"
+        content="Download YouTube videos, Instagram Reels, Facebook videos & TikTok in HD quality (144p–1080p). MP3 download supported. Cleanest UI." />
+    <meta property="og:image" content="https://yourdomain.com/preview.jpg" />
+    <meta property="og:url" content="https://yourdomain.com" />
+    <meta property="og:type" content="website" />
+    
+    <!-- 🌟 TWITTER CARD -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AWD Downloader – HD Video & MP3 Downloader" />
+    <meta name="twitter:description"
+        content="Super fast video downloader supporting YouTube, Instagram, Facebook & more." />
+    <meta name="twitter:image" content="https://yourdomain.com/preview.jpg" />
+    
+    <!-- 🌟 SITE VERIFICATION (Google) -->
+    <meta name="google-site-verification" content="ADD_YOUR_CODE_HERE" />
+    
+    <!-- 🌟 FAVICON -->
+    <link rel="icon" type="image/png" href="static/logo.png" />
+    
+    <!-- 🌟 JSON-LD STRUCTURED DATA (BOOST GOOGLE RANKING) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "AWD Downloader",
+      "url": "https://yourdomain.com",
+      "description": "AWD Downloader - Download YouTube, Instagram, Facebook, TikTok videos in HD. Convert to MP3 fast.",
+      "applicationCategory": "Utility",
+      "operatingSystem": "All",
+      "author": {
+        "@type": "Person",
+        "name": "AWD Developer"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "9863"
+      }
+    }
+    </script>
+
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #f4f5fb;
+            --card-bg: #ffffff;
+            --card-soft: #ffffff;
+            --text-main: #111827;
+            --text-soft: #6b7280;
+            --accent: #fbbf24;
+            --accent-dark: #eab308;
+            --border-subtle: #e5e7eb;
+            --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.18);
+            --radius-lg: 24px;
+            --radius-md: 18px;
+            --radius-pill: 999px;
+        }
+
+        /* THEMES */
+        body.theme-light {
+            --bg: #f4f5fb;
+            --card-bg: #ffffff;
+            --card-soft: #ffffff;
+            --text-main: #111827;
+            --text-soft: #6b7280;
+            --accent: #fbbf24;
+            --accent-dark: #f59e0b;
+            --border-subtle: #e5e7eb;
+            --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.16);
+        }
+
+        body.theme-glass {
+            --bg: radial-gradient(circle at top, #fef3c7, #e0f2fe);
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-soft: rgba(255, 255, 255, 0.7);
+            --text-main: #0f172a;
+            --text-soft: #64748b;
+            --accent: #fb923c;
+            --accent-dark: #f97316;
+            --border-subtle: rgba(148, 163, 184, 0.4);
+            --shadow-soft: 0 20px 50px rgba(15, 23, 42, 0.25);
+        }
+
+        body.theme-dark {
+            --bg: radial-gradient(circle at top, #0f172a, #020617);
+            --card-bg: #020617;
+            --card-soft: #020617;
+            --text-main: #f9fafb;
+            --text-soft: #9ca3af;
+            --accent: #facc15;
+            --accent-dark: #eab308;
+            --border-subtle: #111827;
+            --shadow-soft: 0 22px 60px rgba(15, 23, 42, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            padding: 20px 12px;
+            transition: background 0.3s ease;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 520px;
+            position: relative;
+        }
+
+        /* SIDEBAR */
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(3px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 20;
+        }
+
+        .sidebar-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 260px;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border-subtle);
+            box-shadow: 0 25px 60px rgba(15, 23, 42, 0.4);
+            transform: translateX(-100%);
+            transition: transform 0.22s ease-out;
+            z-index: 30;
+            padding: 20px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 20% 20%, #f97316, #facc15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            color: #111827;
+            box-shadow: 0 0 0 2px rgba(254, 243, 199, 0.9);
+        }
+
+        .sidebar-sub {
+            font-size: 12px;
+            color: var(--text-soft);
+        }
+
+        .sidebar-links {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .sidebar-link {
+            padding: 8px 10px;
+            border-radius: 999px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .sidebar-link.active {
+            background: rgba(250, 204, 21, 0.14);
+            border-color: rgba(250, 204, 21, 0.6);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            font-size: 11px;
+            color: var(--text-soft);
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 10px;
+        }
+
+        /* CARD SHELL */
+        .shell {
+            background: var(--card-soft);
+            border-radius: 32px;
+            padding: 18px 16px 18px;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-subtle);
+        }
+
+        /* TOPBAR */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .left-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hamburger {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: #ffffffdd;
+        }
+
+        .hamburger span,
+        .hamburger span::before,
+        .hamburger span::after {
+            content: "";
+            width: 16px;
+            height: 2px;
+            border-radius: 999px;
+            background: #111827;
+            display: block;
+            position: relative;
+        }
+
+        body.theme-dark .hamburger span,
+        body.theme-dark .hamburger span::before,
+        body.theme-dark .hamburger span::after {
+            background: #e5e7eb;
+        }
+
+        .hamburger span::before {
+            position: absolute;
+            top: -5px;
+            left: 0;
+        }
+
+        .hamburger span::after {
+            position: absolute;
+            top: 5px;
+            left: 0;
+        }
+
+        .app-title {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .theme-toggle {
+            display: flex;
+            gap: 6px;
+        }
+
+        .theme-btn {
+            border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            background: #f9fafb;
+            padding: 6px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-soft);
+        }
+
+        .theme-btn.active {
+            background: var(--accent);
+            color: #111827;
+            border-color: var(--accent-dark);
+            font-weight: 600;
+        }
+
+        body.theme-dark .theme-btn {
+            background: #020617;
+        }
+
+        /* SEARCH AREA */
+        .search-area {
+            margin-top: 4px;
+            margin-bottom: 14px;
+        }
+
+        .search-card {
+            background: var(--card-bg);
+            border-radius: 999px;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .search-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            background: rgba(248, 250, 252, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        body.theme-dark .search-icon {
+            background: #020617;
+            color: #e5e7eb;
+        }
+
+        .search-input {
+            border: none;
+            flex: 1;
+            outline: none;
+            font-size: 14px;
+            background: transparent;
+            color: var(--text-main);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-soft);
+        }
+
+        .primary-btn {
+            border-radius: 999px;
+            border: none;
+            padding: 9px 14px;
+            background: var(--accent);
+            color: #111827;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .pill-btn {
+            border-radius: 999px;
+            border: 1px dashed var(--border-subtle);
+            padding: 8px 12px;
+            font-size: 12px;
+            background: transparent;
+            cursor: pointer;
+            color: var(--text-soft);
+            margin-top: 8px;
+        }
+
+        /* PLATFORM BADGE (next to Analyze) */
+        .platform-badge {
+            border-radius: 999px;
+            border: 1px dashed var(--border-subtle);
+            padding: 5px 10px;
+            font-size: 11px;
+            color: var(--text-soft);
+            white-space: nowrap;
+        }
+
+        /* RESULTS */
+        #results {
+            margin-top: 12px;
+            display: none;
+        }
+
+        .video-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 12px 12px 14px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+        }
+
+        #thumb {
+            width: 100%;
+            border-radius: 20px;
+            display: block;
+            object-fit: cover;
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 10px;
+            color: var(--text-main);
+        }
+
+        .section-heading {
+            margin-top: 14px;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .quality-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .quality-btn {
+            width: 100%;
+            border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            background: #f9fafb;
+            padding: 8px 12px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        body.theme-dark .quality-btn {
+            background: #020617;
+        }
+
+        .quality-label {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .quality-meta {
+            font-size: 12px;
+            color: var(--text-soft);
+        }
+
+        .quality-left {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .quality-download-btn {
+            border-radius: 999px;
+            border: none;
+            padding: 6px 12px;
+            background: var(--accent);
+            color: #111827;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .mp3-btn {
+            margin-top: 10px;
+            width: 100%;
+            border-radius: 999px;
+            border: none;
+            padding: 10px 14px;
+            background: var(--accent);
+            color: #111827;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* PROGRESS */
+        #progressArea {
+            margin-top: 14px;
+            display: none;
+        }
+
+        #progressText {
+            font-size: 12px;
+            color: var(--text-soft);
+            margin-bottom: 6px;
+        }
+
+        .bar {
+            width: 100%;
+            height: 9px;
+            background: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--accent-dark);
+            transition: width 0.2s ease-out;
+        }
+
+        body.theme-dark .bar {
+            background: #020617;
+        }
+
+        /* SMALL SCREENS */
+        @media (max-width: 480px) {
+            body {
+                padding: 4px 4px;
+            }
+
+            .shell {
+                padding: 8px 6px 12px;
+                border-radius: 28px;
+            }
+
+            .theme-toggle {
+                gap: 4px;
+            }
+
+            .theme-btn {
+                padding-inline: 8px;
+                font-size: 10px;
+            }
+
+            .hamburger {
+                width: 32px;
+                height: 32px;
+            }
+        }
+
+        /* iPhone style spinner */
+        .ios-spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid rgba(255, 255, 255, 0.25);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Loading overlay */
+        .loading-box {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.35);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            z-index: 999;
+        }
+
+        /* SUCCESS POPUP */
+        .success-box {
+            position: fixed;
+            bottom: 26px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #22c55e;
+            padding: 12px 18px;
+            color: white;
+            border-radius: 14px;
+            font-size: 15px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.35s ease-out;
+            z-index: 1000;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* ERROR POPUP */
+        .error-box {
+            position: fixed;
+            bottom: 26px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ef4444;
+            padding: 12px 18px;
+            color: white;
+            border-radius: 14px;
+            font-size: 15px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.35s ease-out;
+            z-index: 1000;
+        }
+
+        /* Skeleton loading */
+        .skeleton {
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+            display: none;
+        }
+
+        .skeleton-thumb {
+            height: 190px;
+            background: linear-gradient(90deg, #e2e8f0 0%, #f8fafc 50%, #e2e8f0 100%);
+            border-radius: 18px;
+            animation: pulse 1.3s infinite linear;
+        }
+
+        .skeleton-title {
+            height: 20px;
+            margin: 14px 0 10px;
+            background: linear-gradient(90deg, #e2e8f0 0%, #f8fafc 50%, #e2e8f0 100%);
+            border-radius: 10px;
+            animation: pulse 1.3s infinite linear;
+        }
+
+        .skeleton-line {
+            height: 14px;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #e2e8f0 0%, #f8fafc 50%, #e2e8f0 100%);
+            border-radius: 10px;
+            animation: pulse 1.3s infinite linear;
+        }
+
+        .skeleton-line.short {
+            width: 60%;
+        }
+
+        @keyframes pulse {
+            0% {
+                background-position: -200px 0;
+            }
+
+            100% {
+                background-position: 200px 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="theme-glass">
+    <div class="app">
+
+        <!-- Sidebar + overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <aside class="sidebar" id="sidebar">
+        
+            <!-- Logo + Title -->
+            <div class="sidebar-title-row">
+                <div class="sidebar-logo">AWD</div>
+                <div>
+                    <div style="font-weight:600;">AWD Downloader</div>
+                    <div class="sidebar-sub">Simple • Fast • Clean UI</div>
+                </div>
+            </div>
+        
+            <!-- Navigation Links -->
+            <div class="sidebar-links">
+        
+                <div class="sidebar-link active">
+                    <span>🏠 Home</span>
+                    <span>→</span>
+                </div>
+                <div class="sidebar-link" onclick="openHistory()">
+                    <span>📂 History</span>
+                    <span>→</span>
+                </div>
+
+            </div>
+        
+            <!-- Extra Info Box -->
+            <div style="
+                margin-top: 20px;
+                padding: 12px;
+                border-radius: 16px;
+                border: 1px solid var(--border-subtle);
+                background: var(--card-bg);
+                font-size: 12px;
+                color: var(--text-soft);
+                line-height: 1.45;
+            ">
+                <b>Features:</b><br>
+                • YouTube Video Download<br>
+                • MP3 Audio Extraction<br>
+                • Auto Quality Detection (144p–1440p)<br>
+                • Multi-Platform Support<br>
+                • Skeleton Loader + Progress Bar<br>
+                • Clean Glass/Dark Theme UI
+            </div>
+        
+            <!-- Supported Platforms -->
+            <div class="sidebar-links" style="margin-top: 20px;">
+                <div style="
+                    font-size: 13px; 
+                    color: var(--text-soft);
+                    margin-bottom: 6px;
+                    font-weight: 600;">
+                    Supported Platforms
+                </div>
+        
+                <div class="sidebar-link">
+                    <span>YouTube</span>
+                    <span>▶</span>
+                </div>
+        
+                <div class="sidebar-link">
+                    <span>Instagram (Reels)</span>
+                    <span>📷</span>
+                </div>
+        
+                <div class="sidebar-link">
+                    <span>Facebook</span>
+                    <span>📘</span>
+                </div>
+        
+                <div class="sidebar-link">
+                    <span>Twitter / X</span>
+                    <span>🐦</span>
+                </div>
+        
+                <div class="sidebar-link">
+                    <span>TikTok</span>
+                    <span>🎵</span>
+                </div>
+            </div>
+        
+            <!-- Footer -->
+            <div class="sidebar-footer">
+                © 2025 AWD Downloader<br>
+                Made by <code>Unknown</code><br>
+                Version: <b>1.0.0</b>
+            </div>
+        
+        </aside>
+
+
+        <!-- Main card -->
+        <div class="shell">
+
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="left-group">
+                    <button class="hamburger" id="hamburgerBtn">
+                        <span></span>
+                    </button>
+                    <div class="app-title">AWD Downloader</div>
+                </div>
+
+                <div class="theme-toggle">
+                    <button class="theme-btn" data-theme="light">☀ Light</button>
+                    <button class="theme-btn active" data-theme="glass">🧊 Glass</button>
+                    <button class="theme-btn" data-theme="dark">🌙 Dark</button>
+                </div>
+            </header>
+
+            
+            <section id="historySection" style="display:none; margin-top:20px;">
+                <h2 style="font-size:18px; font-weight:700; margin-bottom:10px;">📂 Download History</h2>
+                <div id="historyList" style="display:flex; flex-direction:column; gap:12px;"></div>
+            </section>
+
+
+            <!-- Search -->
+            <section class="search-area">
+                <div class="search-card">
+                    <div class="search-icon">🔍</div>
+                    <input id="urlInput" class="search-input" placeholder="Paste video link here..." />
+                    <button class="primary-btn" onclick="analyze()">Analyze</button>
+                   
+                </div> 
+                <span id="platformBadge" class="platform-badge">Platform: Auto</span>
+                <button class="pill-btn" onclick="pasteFromClipboard()">📋 Paste from clipboard</button>
+            </section>
+
+            <!-- Results -->
+            <section id="results">
+                <div class="video-card">
+                    <img id="thumb" alt="Video thumbnail">
+
+                    <div id="title" class="video-title"></div>
+
+                    <div class="section-heading">Select Quality</div>
+                    <div id="mp4List" class="quality-list"></div>
+
+                    <div class="section-heading">Audio (MP3)</div>
+                    <button class="mp3-btn" onclick="downloadAudio()">Download MP3</button>
+
+                    <!-- Progress -->
+                    <div id="progressArea">
+                        <p id="progressText"></p>
+                        <div class="bar">
+                            <div class="bar-fill" id="barFill"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+    
+
+    <!-- iPhone style loader -->
+    <div id="loadingBox" class="loading-box" style="display:none;">
+        <div class="ios-spinner"></div>
+        <p>Analyzing…</p>
+    </div>
+
+    <!-- Skeleton loading -->
+    <div id="skeletonBox" class="skeleton" style="display:none;">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-title"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+    </div>
+
+    <!-- Success Popup -->
+    <div id="successBox" class="success-box" style="display:none;">
+        ✔ Analyze Complete!
+    </div>
+
+    <!-- Error Popup -->
+    <div id="errorBox" class="error-box" style="display:none;">
+        <span id="errorMsg"></span>
+    </div>
+
+    <script>
+        // Sidebar logic
+        const sidebar = document.getElementById("sidebar");
+        const sidebarOverlay = document.getElementById("sidebarOverlay");
+        const hamburgerBtn = document.getElementById("hamburgerBtn");
+
+        function openSidebar() {
+            sidebar.classList.add("open");
+            sidebarOverlay.classList.add("visible");
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove("open");
+            sidebarOverlay.classList.remove("visible");
+        }
+
+        hamburgerBtn.addEventListener("click", () => {
+            if (sidebar.classList.contains("open")) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
+        sidebarOverlay.addEventListener("click", closeSidebar);
+
+        // Theme switching
+        const themeButtons = document.querySelectorAll(".theme-btn");
+        const body = document.body;
+
+        themeButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                themeButtons.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+
+                const theme = btn.getAttribute("data-theme");
+                body.classList.remove("theme-light", "theme-glass", "theme-dark");
+                if (theme === "glass") body.classList.add("theme-glass");
+                else if (theme === "dark") body.classList.add("theme-dark");
+                else body.classList.add("theme-light");
+            });
+        });
+    </script>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
