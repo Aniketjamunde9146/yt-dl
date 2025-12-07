@@ -15,9 +15,16 @@ os.makedirs(DOWNLOADS, exist_ok=True)
 
 progress = {"percent": "0%", "speed": "", "eta": ""}
 
+# -------------------------
+# STATIC FILE SERVING (MUST BE ABOVE)
+# -------------------------
+@app.route('/<path:path>')
+def serve_static_file(path):
+    return send_file(path)
+
 
 # -------------------------
-# HOME ROUTE (SERVE HTML)
+# HOME ROUTE
 # -------------------------
 @app.route("/")
 def home():
@@ -49,7 +56,6 @@ def get_instaloader():
     session_path = os.path.abspath(session_file)
 
     L = instaloader.Instaloader(download_video_thumbnails=False)
-
     try:
         L.load_session_from_file(username, session_path)
         return L
@@ -116,7 +122,7 @@ def insta_download():
 
 
 # -------------------------
-# GENERIC ANALYZE (YT, FB, X, etc.)
+# GENERIC ANALYZE
 # -------------------------
 @app.route("/analyze", methods=["POST"])
 def analyze_generic():
@@ -226,7 +232,7 @@ def progress_api():
 
 
 # -------------------------
-# SERVE DOWNLOADED FILE
+# DOWNLOAD FILE
 # -------------------------
 @app.route("/file")
 def serve_file():
@@ -242,7 +248,7 @@ def serve_file():
 
 
 # -------------------------
-# RUN LOCAL
+# RUN LOCAL ONLY
 # -------------------------
 if __name__ == "__main__":
     app.run(debug=True)
