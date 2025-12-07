@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: awd-downloader
-    env: docker
-    plan: free
-    dockerfilePath: ./Dockerfile
-    autoDeploy: true
-    region: singapore
-    branch: main

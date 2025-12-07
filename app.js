@@ -1,53 +1,8 @@
 // ===================== BASIC CONFIG =====================
 const api = window.location.origin;
 
-// allowed resolutions
+// Allowed resolutions
 const ALLOWED_QUALITIES = ["144p", "240p", "360p", "480p", "720p", "1080p"];
-
-
-// ===================== HISTORY SYSTEM =====================
-function saveHistory(entry) {
-    let history = JSON.parse(localStorage.getItem("awd_history") || "[]");
-
-    history.unshift(entry);
-
-    localStorage.setItem("awd_history", JSON.stringify(history));
-}
-
-function loadHistory() {
-    const container = document.getElementById("historyList");
-    const section = document.getElementById("historySection");
-
-    let history = JSON.parse(localStorage.getItem("awd_history") || "[]");
-
-    if (history.length === 0) {
-        container.innerHTML = `<div style="color:#777;">No downloads yet.</div>`;
-        section.style.display = "block";
-        return;
-    }
-
-    container.innerHTML = "";
-
-    history.forEach(item => {
-        container.innerHTML += `
-            <div class="quality-btn" style="flex-direction:column; align-items:flex-start;">
-                <div><b>${item.title}</b></div>
-                <div style="font-size:12px; color:#666;">${item.type} • ${item.time}</div>
-                <button class="quality-download-btn" onclick="forceDownload('${api + "/file?path=" + encodeURIComponent(item.file)}')">
-                    Download Again
-                </button>
-            </div>
-        `;
-    });
-
-    section.style.display = "block";
-}
-
-function openHistory() {
-    document.getElementById("results").style.display = "none";
-    loadHistory();
-}
-
 
 // ===================== DOM ELEMENTS =====================
 const urlInput = document.getElementById("urlInput");
@@ -55,38 +10,26 @@ const resultsSection = document.getElementById("results");
 const thumbEl = document.getElementById("thumb");
 const titleEl = document.getElementById("title");
 const mp4List = document.getElementById("mp4List");
+
 const progressArea = document.getElementById("progressArea");
 const progressText = document.getElementById("progressText");
 const barFill = document.getElementById("barFill");
-const loadingBox = document.getElementById("loadingBox");
-const skeletonBox = document.getElementById("skeletonBox");
+
+const platformBadge = document.getElementById("platformBadge");
+
 const successBox = document.getElementById("successBox");
 const errorBox = document.getElementById("errorBox");
-const errorMsgEl = document.getElementById("errorMsg");
-const platformBadge = document.getElementById("platformBadge");
 
 let progressTimer = null;
 window.currentURL = null;
 
-
-// ===================== FORCE MOBILE DOWNLOAD =====================
-function forceDownload(url) {
-    const a = document.createElement("a");
-    a.href = url;
-    a.setAttribute("download", "");
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-}
-
-
 // ===================== PLATFORM DETECTION =====================
 function detectPlatform(url) {
-    if (!url) return "Unknown";
+    if (!url) return "Auto";
     const u = url.toLowerCase();
 
-    if (u.includes("instagram.com")) return "Instagram";
     if (u.includes("youtube.com") || u.includes("youtu.be")) return "YouTube";
+    if (u.includes("instagram.com")) return "Instagram";
     if (u.includes("tiktok.com")) return "TikTok";
     if (u.includes("facebook.com") || u.includes("fb.watch")) return "Facebook";
     if (u.includes("twitter.com") || u.includes("x.com")) return "Twitter/X";
@@ -97,117 +40,113 @@ function detectPlatform(url) {
 }
 
 function updatePlatformBadge(name) {
+    if (!platformBadge) return;
     platformBadge.textContent = "Platform: " + name;
 }
 
-
 // ===================== UI HELPERS =====================
-function showLoader() { loadingBox.style.display = "flex"; }
-function hideLoader() { loadingBox.style.display = "none"; }
-function showSkeleton() { skeletonBox.style.display = "block"; }
-function hideSkeleton() { skeletonBox.style.display = "none"; }
-function hideResults() { resultsSection.style.display = "none"; }
-
-function showSuccess() {
+function showSuccess(msg = "✔ Done") {
+    if (!successBox) return;
+    successBox.textContent = msg;
     successBox.style.display = "block";
-    setTimeout(() => successBox.style.display = "none", 2000);
+    setTimeout(() => {
+        successBox.style.display = "none";
+    }, 2000);
 }
 
 function showError(msg) {
-    errorMsgEl.textContent = msg;
+    if (!errorBox) return;
+    errorBox.textContent = msg;
     errorBox.style.display = "block";
-    setTimeout(() => errorBox.style.display = "none", 2600);
+    setTimeout(() => {
+        errorBox.style.display = "none";
+    }, 2600);
 }
 
+function showResults() {
+    if (resultsSection) resultsSection.style.display = "block";
+}
 
-// ===================== INSTAGRAM =====================
-async function analyzeInstagram(url) {
-    showLoader();
-    hideResults();
-    updatePlatformBadge("Instagram");
+function hideResults() {
+    if (resultsSection) resultsSection.style.display = "none";
+}
 
+// ===================== CLIPBOARD PASTE =====================
+async function pasteFromClipboard() {
     try {
-        const res = await fetch(api + "/instagram/analyze", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url })
-        });
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+            return showError("Clipboard not supported in this browser.");
+        }
+        const text = await navigator.clipboard.readText();
+        if (!text) return showError("Clipboard is empty.");
+        urlInput.value = text.trim();
+        showSuccess("Link pasted.");
+    } catch (e) {
+        showError("Failed to read clipboard.");
+    }
+}
 
-        const data = await res.json();
-        hideLoader();
+// Make it global (button calls it)
+window.pasteFromClipboard = pasteFromClipboard;
 
-        if (data.error) return showError(data.error);
+// ===================== SIZE HELPER =====================
+function toMB(bytes) {
+    if (!bytes) return "Unknown size";
+    return (bytes / 1024 / 1024).toFixed(1) + " MB";
+}
 
-        thumbEl.style.display = "none";
-        titleEl.innerText = data.caption || "Instagram Reel";
+// ===================== BUILD QUALITY LIST =====================
+function buildQualityList(formats) {
+    mp4List.innerHTML = "";
 
-        mp4List.innerHTML = `
+    // Keep best file for each allowed quality
+    const bestByQuality = {};
+
+    (formats || []).forEach(f => {
+        if (f.ext !== "mp4") return;
+
+        const label = f.label || "";
+        const match = label.match(/(\d{3,4}p)/);
+        if (!match) return;
+
+        const q = match[1]; // e.g., "720p"
+        if (!ALLOWED_QUALITIES.includes(q)) return;
+
+        if (!bestByQuality[q] || (f.filesize || 0) > (bestByQuality[q].filesize || 0)) {
+            bestByQuality[q] = f;
+        }
+    });
+
+    ALLOWED_QUALITIES.forEach(q => {
+        const f = bestByQuality[q];
+        if (!f) return;
+
+        mp4List.innerHTML += `
             <div class="quality-btn">
                 <div>
-                    <div class="quality-label">Download Reel (HD)</div>
-                    <div class="quality-meta">Best Quality</div>
+                    <div class="quality-label">${q}</div>
+                    <div class="quality-meta">${toMB(f.filesize)}</div>
                 </div>
-                <button class="quality-download-btn" onclick="downloadInstagram('${url}')">
+                <button class="quality-download-btn" onclick="downloadVideo('${f.format_id}')">
                     Download
                 </button>
             </div>
         `;
+    });
 
-        resultsSection.style.display = "block";
-        showSuccess();
-    } catch {
-        hideLoader();
-        showError("Instagram analyze failed.");
+    if (!mp4List.innerHTML.trim()) {
+        mp4List.innerHTML = `<div class="quality-meta">No standard 144p–1080p formats found for this video.</div>`;
     }
 }
 
-async function downloadInstagram(url) {
-    showLoader();
-    updatePlatformBadge("Instagram");
-
-    try {
-        const res = await fetch(api + "/instagram/download", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url })
-        });
-
-        const data = await res.json();
-        hideLoader();
-
-        if (data.error) return showError(data.error);
-
-        let file = data.files[0];
-        forceDownload(api + "/file?path=" + encodeURIComponent(file));
-
-        saveHistory({
-            title: "Instagram Reel",
-            url,
-            type: "Reel",
-            time: new Date().toLocaleString(),
-            file
-        });
-
-    } catch {
-        hideLoader();
-        showError("Instagram download failed.");
-    }
-}
-
-
-// ===================== MAIN ANALYZE =====================
+// ===================== ANALYZE =====================
 async function analyze() {
     const url = (urlInput.value || "").trim();
-
-    if (!url) return showError("Paste a link first.");
+    if (!url) return showError("Paste a video link first.");
 
     const platform = detectPlatform(url);
     updatePlatformBadge(platform);
 
-    if (platform === "Instagram") return analyzeInstagram(url);
-
-    showLoader();
-    showSkeleton();
     hideResults();
 
     try {
@@ -218,85 +157,48 @@ async function analyze() {
         });
 
         const data = await res.json();
-        hideLoader();
-        hideSkeleton();
 
-        if (data.error) return showError(data.error);
+        if (!res.ok || data.error) {
+            console.error("Analyze error:", data.error);
+            return showError("Analyze failed. Try another link.");
+        }
 
         window.currentURL = url;
 
-        thumbEl.style.display = "block";
-        thumbEl.src = data.thumbnail;
-        titleEl.textContent = data.title;
+        if (data.thumbnail) {
+            thumbEl.src = data.thumbnail;
+            thumbEl.style.display = "block";
+        } else {
+            thumbEl.style.display = "none";
+        }
 
-        buildQualityList(data.formats);
+        titleEl.textContent = data.title || "Video";
 
-        resultsSection.style.display = "block";
-        showSuccess();
-
-    } catch {
-        hideLoader();
-        hideSkeleton();
-        showError("Analyze failed.");
+        buildQualityList(data.formats || []);
+        showResults();
+        showSuccess("Analyze complete.");
+    } catch (e) {
+        console.error(e);
+        showError("Analyze failed (network error).");
     }
 }
 
+// Make analyze available for inline onclick
+window.analyze = analyze;
 
-// ===================== QUALITY LIST =====================
-function toMB(bytes) {
-    if (!bytes) return "Unknown";
-    return (bytes / 1024 / 1024).toFixed(1) + " MB";
+// ===================== FORCE DOWNLOAD (Mobile safe) =====================
+function forceDownload(url) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.setAttribute("download", "");
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
 }
 
-function buildQualityList(formats) {
-    mp4List.innerHTML = "";
-
-    const best = {};
-
-    formats.forEach(f => {
-        if (f.ext !== "mp4") return;
-
-        // आता backend label आधीच "720p" असं देतो
-        const match = (f.label || "").match(/(\d{3,4}p)/);
-        if (!match) return;
-
-        const q = match[1]; // e.g. "720p"
-
-        if (!ALLOWED_QUALITIES.includes(q)) return;
-
-        if (!best[q] || (f.filesize || 0) > (best[q].filesize || 0)) {
-            best[q] = f;
-        }
-    });
-
-    ALLOWED_QUALITIES.forEach(q => {
-        if (best[q]) {
-            let f = best[q];
-            mp4List.innerHTML += `
-                <div class="quality-btn">
-                    <div>
-                        <div class="quality-label">${q}</div>
-                        <div class="quality-meta">${toMB(f.filesize)}</div>
-                    </div>
-                    <button class="quality-download-btn" onclick="downloadVideo('${f.format_id}')">
-                        Download
-                    </button>
-                </div>
-            `;
-        }
-    });
-
-    // जर काहीच quality मिळाली नाहीत तर user ला सांग
-    if (!mp4List.innerHTML.trim()) {
-        mp4List.innerHTML = `<div class="quality-meta">No standard 144p–1080p formats available for this video. Try another link.</div>`;
-    }
-}
-
-
-
-// ===================== VIDEO DOWNLOAD =====================
+// ===================== DOWNLOAD VIDEO =====================
 async function downloadVideo(formatId) {
-    if (!window.currentURL) return showError("Analyze first.");
+    if (!window.currentURL) return showError("Analyze the link first.");
 
     startProgress("Video");
 
@@ -313,28 +215,26 @@ async function downloadVideo(formatId) {
         const data = await res.json();
         stopProgress();
 
-        if (data.error) return showError(data.error);
+        if (!res.ok || data.error) {
+            console.error("Video download error:", data.error);
+            return showError("Video download failed.");
+        }
 
-        forceDownload(api + "/file?path=" + encodeURIComponent(data.file));
-
-        saveHistory({
-            title: titleEl.textContent,
-            url: window.currentURL,
-            type: "MP4",
-            time: new Date().toLocaleString(),
-            file: data.file
-        });
-
-    } catch {
+        const filePath = data.file;
+        forceDownload(api + "/file?path=" + encodeURIComponent(filePath));
+        showSuccess("Download ready.");
+    } catch (e) {
+        console.error(e);
         stopProgress();
         showError("Video download failed.");
     }
 }
 
+window.downloadVideo = downloadVideo;
 
-// ===================== AUDIO DOWNLOAD =====================
+// ===================== DOWNLOAD AUDIO (MP3) =====================
 async function downloadAudio() {
-    if (!window.currentURL) return showError("Analyze first.");
+    if (!window.currentURL) return showError("Analyze the link first.");
 
     startProgress("Audio");
 
@@ -342,41 +242,38 @@ async function downloadAudio() {
         const res = await fetch(api + "/download/audio", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                url: window.currentURL
-            })
+            body: JSON.stringify({ url: window.currentURL })
         });
 
         const data = await res.json();
         stopProgress();
 
-        if (data.error) return showError(data.error);
+        if (!res.ok || data.error) {
+            console.error("Audio download error:", data.error);
+            return showError("MP3 download failed.");
+        }
 
-        forceDownload(api + "/file?path=" + encodeURIComponent(data.file));
-
-        saveHistory({
-            title: titleEl.textContent,
-            url: window.currentURL,
-            type: "MP3",
-            time: new Date().toLocaleString(),
-            file: data.file
-        });
-
-    } catch {
+        const filePath = data.file;
+        forceDownload(api + "/file?path=" + encodeURIComponent(filePath));
+        showSuccess("MP3 ready.");
+    } catch (e) {
+        console.error(e);
         stopProgress();
-        showError("Audio download failed.");
+        showError("MP3 download failed.");
     }
 }
 
+window.downloadAudio = downloadAudio;
 
 // ===================== PROGRESS BAR =====================
 function startProgress(type) {
+    if (!progressArea) return;
     progressArea.style.display = "block";
     progressText.textContent = `Starting ${type}…`;
     barFill.style.width = "0%";
 
     if (progressTimer) clearInterval(progressTimer);
-    progressTimer = setInterval(updateProgress, 400);
+    progressTimer = setInterval(updateProgress, 500);
 }
 
 function stopProgress() {
@@ -389,15 +286,22 @@ async function updateProgress() {
         const res = await fetch(api + "/progress");
         const p = await res.json();
 
-        barFill.style.width = p.percent;
-        progressText.textContent = `${p.percent} • ${p.speed} • ${p.eta}`;
+        const percentStr = p.percent || "0%";
+        barFill.style.width = percentStr;
+        progressText.textContent = `${percentStr} • ${p.speed || ""} • ${p.eta || ""}`;
 
-        if (parseFloat(p.percent) >= 100) stopProgress();
-    } catch {}
+        const numeric = parseFloat(percentStr.replace("%", "")) || 0;
+        if (numeric >= 100) {
+            stopProgress();
+        }
+    } catch (e) {
+        console.error("Progress error:", e);
+    }
 }
-
 
 // ===================== ENTER KEY =====================
 urlInput.addEventListener("keydown", e => {
-    if (e.key === "Enter") analyze();
+    if (e.key === "Enter") {
+        analyze();
+    }
 });

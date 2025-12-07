@@ -1,14 +1,18 @@
 import instaloader
+import getpass
 import os
 
 USERNAME = "aniketwebdev.dev"
-PASSWORD = input("Enter Instagram password: ")
+PASSWORD = getpass.getpass("Enter Instagram Password: ")
 
 L = instaloader.Instaloader()
 
-L.login(USERNAME, PASSWORD)
+print("Logging in...")
+try:
+    L.login(USERNAME, PASSWORD)
+    session_file = f"session-{USERNAME}"
+    L.save_session_to_file(session_file)
+    print(f"✔ Login successful. Session saved as: {session_file}")
 
-session_filename = f"session-{USERNAME}"
-L.save_session_to_file(session_filename)
-
-print("✔ Session saved as:", session_filename)
+except Exception as e:
+    print("❌ Login failed:", e)

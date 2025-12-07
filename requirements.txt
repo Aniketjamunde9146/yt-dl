@@ -1,6 +1,6 @@
-Flask
-Flask-Cors
-instaloader
+Flask==3.0.2
+Flask-Cors==4.0.0
+instaloader==4.11
 yt-dlp>=2024.12.1
 requests
-Werkzeug
+Werkzeug==3.0.1
